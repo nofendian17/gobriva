@@ -157,7 +157,7 @@ export BRI_SANDBOX="true"
 
 ### Private Key Format
 
-The private key should be in PEM format:
+The private key should be in PEM format with 2048 bits:
 
 ```pem
 -----BEGIN PRIVATE KEY-----

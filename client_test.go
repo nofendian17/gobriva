@@ -3,7 +3,11 @@ package gobriva
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
 	"errors"
 	"fmt"
 	"io"
@@ -59,33 +63,26 @@ func (m *MockAuthenticator) EnsureAuthenticated(ctx context.Context) error {
 	return nil
 }
 
-var privateKeyTest = `-----BEGIN RSA PRIVATE KEY-----
-MIIEoQIBAAKCAQB4ke4WQ+V3lcZcoSMdMKCj1zRGIOoJ2ctD01hsJ1Bo/O6QwiRu
-sAGSm13afA43Hs+ibXOW2B+as4xXNX1EaJwDYJ60dUBZOjy1S66xhdp/+b8NbxRw
-tE2VGAyp7uafEyj38QN0calQhmpTOUeSGScoybrogOWW/2n/OibDhWt7vlSe0XKd
-tvncrjaQ6nctSR9Ui/zCE6szwt/ZN5yNkR4hjCsRPkQ0zsVz0dQl8NdPtgRgz+uC
-EHcTvD0ssJiipc9CApZc5moxNxq8TE11GdQEVqu1ej+s2NUENCdkd2ee3W9Wo8Ht
-VLD6DMdtnVoISK/MkCbNBcNw/jaaK5oSKVRhAgMBAAECggEAVe78mJXv2NnBNYgL
-tORRujTKJymSZU77lu3tWbhzkUCk8DvPJ6z+kfV2YSCGKTcmmggUmHCVpfdOkWGo
-VLeSar3Un53qLS5a0oSMkC5s20Wvq+19zg5UNW2cqQmDCeHoEz+OTNIt8Ry8b3Cl
-2DVhOar+MnScLpEAhU53DmfrgZfYDMQT7H7gg4Bp+P57GXg1mHP1iRNzdPvd+9S7
-ql02w+N1pjta0eF4N68p7nPOIsUq2oZyM/u4glx8eWsOt+P/iQ1yalH80iKKuQaa
-9sAXLWCWGzkFi8lanIVzuXmcycknX3lCBC9H70gGC658Q5QVmY8K/jXLw+BGfRjH
-tG4B2QKBgQDZ0up5I8SnR3ChD0wvDs5/BkWjdg13hpdZzko9AVfzVnnDZNrB7Gbf
-UUiFDuHZQfFb/I/kG2NnfrCNJUwX7omtexSxXIOqoErOHp+Wotmjo50tVQC1LblI
-HEDeZWWwmL4foxkXewLj0nE4HkWOGfLGhIn+hP7+DmEwo8lJX3tw9wKBgQCNs4jh
-Hgg3twHQsHmjQxq1nF188sAaC/HXF4G/WqE6IgmHZZ4MFLYE7gCine1e+yB+QhwS
-b8vTjtYMtO8E8iK717duVhbsTyuE4ePkpJHGIiMbrsw037Kov5GY3ayE7F/pHI7V
-ePdFkmoP/yL2s5IG+jIWRq9Sg1q6R0g2S/DnZwKBgEURwTHKargUSh14CVM+obHb
-nkdXzqtg7SsX46h2fZn2iMOxfkBRoskbMCCo+Gp4o3zkmAffu2R84qTO99L624M7
-7PLUgBehnja/tSEB4HsoDVXrhz7sEb1Q4CzlABrAREEp6XHtmpv9BdOinbGSfs3+
-BvfC2kxa6OyQcuomMbE/AoGAAsG6aP7HlCXoUCIOy8FTdLMNEpA6codG9jNL3+go
-eNQOsWals4B3phLnSkKeSpnCIRKyLx2jroL54RdoCwWW7Wad9/SOz5wesaAfaeRV
-vbAOVMyKxoCPnj7T21B8ub1LhGJ82ORYky7tB1CkYn5N2frmHI7VfFp32mXmnr/N
-eQMCgYAn5WAyxLyEaKmSDyvArqf86RFO6SNlK02T45Hh6hrbi0ArJFgyatSEY1D6
-/uqKDBvBA+GtVIbcepaiiCeNIrtj4DwZaGRVT2tqUcUiLKJICCesRsw4mZ5x/KUo
-38Ex8a2e++RahDu94ag3mgj5FENlHJeMBEhWa+aPmlzwEXEj1w==
------END RSA PRIVATE KEY-----`
+// getTestPrivateKey returns a consistent test private key for all tests
+func getTestPrivateKey() string {
+	// For testing purposes, we'll use a simple approach - generate a key once and return it
+	// This ensures consistency across test runs while avoiding hardcoded keys
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to generate test private key: %v", err))
+	}
+
+	// Encode the private key to PEM format
+	privateKeyBytes := x509.MarshalPKCS1PrivateKey(privateKey)
+	privateKeyPEM := pem.EncodeToMemory(&pem.Block{
+		Type:  "RSA PRIVATE KEY",
+		Bytes: privateKeyBytes,
+	})
+
+	return string(privateKeyPEM)
+}
+
+var privateKeyTest = getTestPrivateKey()
 
 func TestClientWithMocks(t *testing.T) {
 	// Create mock HTTP client
