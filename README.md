@@ -34,7 +34,7 @@ A Go library for integrating with BRI's BRIVA WS SNAP BI API.
 ## Installation
 
 ```bash
-go get gobriva
+go get github.com/nofendian17/gobriva@latest
 ```
 
 ### Requirements
