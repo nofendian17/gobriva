@@ -8,7 +8,7 @@ type Amount struct {
 	Currency string `json:"currency"`
 }
 
-// AdditionalInfo represents additional // NewCreateVirtualAccountRequest creates a new CreateVirtualAccountRequest with default values
+// NewCreateVirtualAccountRequest creates a new CreateVirtualAccountRequest with default values
 func NewCreateVirtualAccountRequest(partnerServiceID, customerNo, vaNo, vaName, trxID string, amount float64, currency, expiredDate string) *CreateVirtualAccountRequest {
 	return &CreateVirtualAccountRequest{
 		PartnerServiceID:   partnerServiceID,
