@@ -28,7 +28,6 @@ A Go library for integrating with BRI's BRIVA WS SNAP BI API.
 - [Testing](#testing)
 - [Security](#security)
 - [Development](#development)
-- [Changelog](#changelog)
 - [License](#license)
 
 ## Installation
@@ -466,8 +465,6 @@ gobriva/
 ### Building
 
 ```bash
-# Build the library
-go build ./...
 
 # Run tests
 go test ./...
@@ -491,21 +488,6 @@ go doc -all
 - Include comprehensive test coverage
 - Use `gofmt` for code formatting
 - Run `go vet` and `golint` for static analysis
-
-## Changelog
-
-### v1.0.1 (Latest)
-- **Fixed**: Unit test for `NewStructuredBRIAPIResponse` function - now correctly extracts HTTP status code from response definition instead of using hardcoded value
-- **Tests**: All 75 unit tests now pass successfully
-
-### v1.0.0
-- Initial release with full BRIVA WS SNAP BI API implementation
-- OAuth2 authentication with RSA signing
-- HMAC-SHA512 request signing
-- Complete virtual account operations (create, update, inquiry, delete, status, reports)
-- Comprehensive error handling with structured response codes
-- Debug mode for HTTP request/response logging
-- Interface-based design for testability
 
 ## License
 
