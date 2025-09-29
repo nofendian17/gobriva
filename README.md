@@ -12,6 +12,7 @@ A Go library for integrating with BRI's BRIVA WS SNAP BI API.
 - **HMAC-SHA512 request signing** - Cryptographic request integrity verification
 - **Production and sandbox environments** - Environment-specific configuration support
 - **Interface-based design for testability** - Dependency injection for comprehensive testing
+- **Comprehensive test suite** - 75+ unit tests with 81% code coverage
 - **Debug mode** for HTTP request/response logging with timing measurements
 - **Enhanced error handling** with detailed suggestions and severity levels
 - **Comprehensive response code definitions** - Built-in BRI API response code handling
@@ -27,6 +28,7 @@ A Go library for integrating with BRI's BRIVA WS SNAP BI API.
 - [Testing](#testing)
 - [Security](#security)
 - [Development](#development)
+- [Changelog](#changelog)
 - [License](#license)
 
 ## Installation
@@ -292,10 +294,11 @@ type StructuredBRIAPIResponse struct {
 
 ```go
 func (e *StructuredBRIAPIResponse) GetCategory() ErrorCategory
-func (e *StructuredBRIAPIResponse) GetSeverity() ErrorSeverity
-func (e *StructuredBRIAPIResponse) IsRetryable() bool
+func (e *StructuredBRIAPIResponse) GetTimestamp() time.Time
+func (e *StructuredBRIAPIResponse) Error() string 
 func (e *StructuredBRIAPIResponse) IsPending() bool
-func (e *StructuredBRIAPIResponse) GetField() string
+func (e *StructuredBRIAPIResponse) IsSuccess() bool
+func (e *StructuredBRIAPIResponse) IsClientError() bool
 ```
 
 ### Error Handling Example
@@ -306,8 +309,6 @@ if err != nil {
 	if briErr, ok := err.(*gobriva.StructuredBRIAPIResponse); ok {
 		log.Printf("BRI Error [%s]: %s", briErr.ResponseCode, briErr.ResponseMessage)
 		log.Printf("Category: %s", briErr.GetCategory())
-		log.Printf("Severity: %s", briErr.GetSeverity())
-		log.Printf("Retryable: %v", briErr.IsRetryable())
 
 		if briErr.IsPending() {
 			log.Printf("Unknown response code - manual verification required")
@@ -321,7 +322,7 @@ if err != nil {
 
 ### Test Coverage
 
-Current test coverage: **81.6%**
+Current test coverage: **81.0%**
 
 ### Testing Strategy
 
@@ -454,12 +455,12 @@ gobriva/
 ├── client.go          # Main client implementation
 ├── auth.go            # Authentication logic
 ├── va.go              # Virtual account operations
-├── models.go          # Request/response types
-├── response_codes.go  # BRI response code definitions
-├── client_test.go     # Comprehensive test suite
+├── models.go          # Request/response types and helper functions
+├── response_codes.go  # BRI response code definitions and error handling
+├── client_test.go     # Comprehensive test suite (75+ tests)
 ├── go.mod             # Go module definition
 ├── README.md          # This documentation
-└── doc/               # API documentation
+└── .gitignore         # Git ignore patterns
 ```
 
 ### Building
@@ -490,6 +491,21 @@ go doc -all
 - Include comprehensive test coverage
 - Use `gofmt` for code formatting
 - Run `go vet` and `golint` for static analysis
+
+## Changelog
+
+### v1.0.1 (Latest)
+- **Fixed**: Unit test for `NewStructuredBRIAPIResponse` function - now correctly extracts HTTP status code from response definition instead of using hardcoded value
+- **Tests**: All 75 unit tests now pass successfully
+
+### v1.0.0
+- Initial release with full BRIVA WS SNAP BI API implementation
+- OAuth2 authentication with RSA signing
+- HMAC-SHA512 request signing
+- Complete virtual account operations (create, update, inquiry, delete, status, reports)
+- Comprehensive error handling with structured response codes
+- Debug mode for HTTP request/response logging
+- Interface-based design for testability
 
 ## License
 

@@ -517,8 +517,6 @@ type StructuredBRIAPIResponse struct {
 	ResponseMessage    string                   // The actual response message from API
 	ResponseDefinition *BRIVAResponseDefinition // Structured response definition
 	HTTPStatusCode     int                      // HTTP status code
-	Cause              error                    // Underlying cause
-	Field              string                   // Field that caused the error (if applicable)
 	RequestID          string                   // Request ID for tracking
 	Timestamp          time.Time                // When the error occurred
 }
@@ -535,24 +533,9 @@ func (e *StructuredBRIAPIResponse) Error() string {
 	return fmt.Sprintf("BRI API Error [%s]: %s", e.ResponseCode, e.ResponseMessage)
 }
 
-// Unwrap returns the underlying cause
-func (e *StructuredBRIAPIResponse) Unwrap() error {
-	return e.Cause
-}
-
 // GetTimestamp returns when the error occurred
 func (e *StructuredBRIAPIResponse) GetTimestamp() time.Time {
 	return e.Timestamp
-}
-
-// IsRetryable checks if the response indicates a retryable error
-func (e *StructuredBRIAPIResponse) IsRetryable() bool {
-	if e.ResponseDefinition != nil && e.ResponseDefinition.ResponseCode != nil {
-		status := e.ResponseDefinition.ResponseCode.HTTPStatus
-		// Retry on server errors (5xx) and some client errors that might be transient
-		return status >= 500 || status == 429 || status == 408
-	}
-	return false
 }
 
 // GetCategory returns the response category
@@ -578,23 +561,16 @@ func (e *StructuredBRIAPIResponse) IsPending() bool {
 	return e.GetCategory() == CategoryPending
 }
 
-// GetField returns the field that caused the error
-func (e *StructuredBRIAPIResponse) GetField() string {
-	if e.ResponseDefinition != nil {
-		return e.ResponseDefinition.Field
-	}
-	return e.Field
-}
-
 // NewStructuredBRIAPIResponse creates a new structured BRI API response
-func NewStructuredBRIAPIResponse(responseCode, responseMessage string, cause error) *StructuredBRIAPIResponse {
+func NewStructuredBRIAPIResponse(responseCode, responseMessage string) *StructuredBRIAPIResponse {
 	definition := GetBRIVAResponseDefinition(responseCode)
 
-	var httpStatusCode = 500 // default
-	var field string
-	if definition != nil {
+	// Extract HTTP status code from the definition
+	var httpStatusCode int
+	if definition != nil && definition.ResponseCode != nil {
 		httpStatusCode = definition.ResponseCode.HTTPStatus
-		field = definition.Field
+	} else {
+		httpStatusCode = 500 // default fallback
 	}
 
 	return &StructuredBRIAPIResponse{
@@ -602,8 +578,6 @@ func NewStructuredBRIAPIResponse(responseCode, responseMessage string, cause err
 		ResponseMessage:    responseMessage,
 		ResponseDefinition: definition,
 		HTTPStatusCode:     httpStatusCode,
-		Cause:              cause,
-		Field:              field,
 		Timestamp:          time.Now(),
 	}
 }

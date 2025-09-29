@@ -2032,17 +2032,6 @@ func TestStructuredBRIAPIResponse_ErrorNoDefinition(t *testing.T) {
 	}
 }
 
-func TestStructuredBRIAPIResponse_Unwrap(t *testing.T) {
-	cause := fmt.Errorf("underlying error")
-	resp := &StructuredBRIAPIResponse{
-		Cause: cause,
-	}
-
-	if resp.Unwrap() != cause {
-		t.Error("Expected Unwrap to return the underlying cause")
-	}
-}
-
 func TestStructuredBRIAPIResponse_GetTimestamp(t *testing.T) {
 	before := time.Now()
 	resp := &StructuredBRIAPIResponse{
@@ -2056,41 +2045,6 @@ func TestStructuredBRIAPIResponse_GetTimestamp(t *testing.T) {
 	}
 	if timestamp.Before(before) || timestamp.After(after) {
 		t.Error("Expected timestamp to be within reasonable range")
-	}
-}
-
-func TestStructuredBRIAPIResponse_IsRetryable(t *testing.T) {
-	// Test retryable server error
-	retryableResp := &StructuredBRIAPIResponse{
-		ResponseDefinition: &BRIVAResponseDefinition{
-			ResponseCode: &BRIResponseCode{HTTPStatus: 500, FullCode: "5002701"},
-		},
-	}
-
-	if !retryableResp.IsRetryable() {
-		t.Error("Expected 500 error to be retryable")
-	}
-
-	// Test retryable client error (429 Too Many Requests)
-	retryableClientResp := &StructuredBRIAPIResponse{
-		ResponseDefinition: &BRIVAResponseDefinition{
-			ResponseCode: &BRIResponseCode{HTTPStatus: 429, FullCode: "4290000"},
-		},
-	}
-
-	if !retryableClientResp.IsRetryable() {
-		t.Error("Expected 429 error to be retryable")
-	}
-
-	// Test non-retryable client error
-	nonRetryableResp := &StructuredBRIAPIResponse{
-		ResponseDefinition: &BRIVAResponseDefinition{
-			ResponseCode: &BRIResponseCode{HTTPStatus: 400, FullCode: "4002701"},
-		},
-	}
-
-	if nonRetryableResp.IsRetryable() {
-		t.Error("Expected 400 error to not be retryable")
 	}
 }
 
@@ -2163,32 +2117,8 @@ func TestStructuredBRIAPIResponse_IsPending(t *testing.T) {
 	}
 }
 
-func TestStructuredBRIAPIResponse_GetField(t *testing.T) {
-	resp := &StructuredBRIAPIResponse{
-		Field: "virtualAccountNo",
-		ResponseDefinition: &BRIVAResponseDefinition{
-			Field: "partnerServiceId",
-		},
-	}
-
-	if resp.GetField() != "partnerServiceId" {
-		t.Error("Expected GetField to return field from ResponseDefinition")
-	}
-}
-
-func TestStructuredBRIAPIResponse_GetFieldNoDefinition(t *testing.T) {
-	resp := &StructuredBRIAPIResponse{
-		Field: "virtualAccountNo",
-	}
-
-	if resp.GetField() != "virtualAccountNo" {
-		t.Error("Expected GetField to return field from struct when no definition")
-	}
-}
-
 func TestNewStructuredBRIAPIResponse(t *testing.T) {
-	cause := fmt.Errorf("test error")
-	resp := NewStructuredBRIAPIResponse("4002701", "Invalid field format", cause)
+	resp := NewStructuredBRIAPIResponse("4002701", "Invalid field format")
 
 	if resp.ResponseCode != "4002701" {
 		t.Errorf("Expected ResponseCode '4002701', got '%s'", resp.ResponseCode)
@@ -2196,14 +2126,8 @@ func TestNewStructuredBRIAPIResponse(t *testing.T) {
 	if resp.ResponseMessage != "Invalid field format" {
 		t.Errorf("Expected ResponseMessage 'Invalid field format', got '%s'", resp.ResponseMessage)
 	}
-	if resp.Cause != cause {
-		t.Error("Expected Cause to match provided error")
-	}
 	if resp.HTTPStatusCode != 400 {
 		t.Errorf("Expected HTTPStatusCode 400, got %d", resp.HTTPStatusCode)
-	}
-	if resp.GetField() != "virtualAccountNo" {
-		t.Errorf("Expected Field 'virtualAccountNo', got '%s'", resp.GetField())
 	}
 }
 

@@ -32,7 +32,7 @@ func (c *Client) CreateVirtualAccount(ctx context.Context, req *CreateVirtualAcc
 	if resp.StatusCode != http.StatusOK {
 		var errorResp ErrorResponse
 		json.Unmarshal(respBody, &errorResp)
-		return nil, NewStructuredBRIAPIResponse(errorResp.ResponseCode, errorResp.ResponseMessage, nil)
+		return nil, NewStructuredBRIAPIResponse(errorResp.ResponseCode, errorResp.ResponseMessage)
 	}
 
 	var createResp CreateVirtualAccountResponse
@@ -67,7 +67,7 @@ func (c *Client) UpdateVirtualAccount(ctx context.Context, req *UpdateVirtualAcc
 	if resp.StatusCode != http.StatusOK {
 		var errorResp ErrorResponse
 		json.Unmarshal(respBody, &errorResp)
-		return nil, NewStructuredBRIAPIResponse(errorResp.ResponseCode, errorResp.ResponseMessage, nil)
+		return nil, NewStructuredBRIAPIResponse(errorResp.ResponseCode, errorResp.ResponseMessage)
 	}
 
 	var updateResp UpdateVirtualAccountResponse
@@ -102,7 +102,7 @@ func (c *Client) UpdateVirtualAccountStatus(ctx context.Context, req *UpdateVirt
 	if resp.StatusCode != http.StatusOK {
 		var errorResp ErrorResponse
 		json.Unmarshal(respBody, &errorResp)
-		return nil, NewStructuredBRIAPIResponse(errorResp.ResponseCode, errorResp.ResponseMessage, nil)
+		return nil, NewStructuredBRIAPIResponse(errorResp.ResponseCode, errorResp.ResponseMessage)
 	}
 
 	var statusResp UpdateVirtualAccountStatusResponse
@@ -137,7 +137,7 @@ func (c *Client) InquiryVirtualAccount(ctx context.Context, req *InquiryVirtualA
 	if resp.StatusCode != http.StatusOK {
 		var errorResp ErrorResponse
 		json.Unmarshal(respBody, &errorResp)
-		return nil, NewStructuredBRIAPIResponse(errorResp.ResponseCode, errorResp.ResponseMessage, nil)
+		return nil, NewStructuredBRIAPIResponse(errorResp.ResponseCode, errorResp.ResponseMessage)
 	}
 
 	var inquiryResp InquiryVirtualAccountResponse
@@ -172,7 +172,7 @@ func (c *Client) DeleteVirtualAccount(ctx context.Context, req *DeleteVirtualAcc
 	if resp.StatusCode != http.StatusOK {
 		var errorResp ErrorResponse
 		json.Unmarshal(respBody, &errorResp)
-		return nil, NewStructuredBRIAPIResponse(errorResp.ResponseCode, errorResp.ResponseMessage, nil)
+		return nil, NewStructuredBRIAPIResponse(errorResp.ResponseCode, errorResp.ResponseMessage)
 	}
 
 	var deleteResp DeleteVirtualAccountResponse
@@ -207,7 +207,7 @@ func (c *Client) GetVirtualAccountReport(ctx context.Context, req *VirtualAccoun
 	if resp.StatusCode != http.StatusOK {
 		var errorResp ErrorResponse
 		json.Unmarshal(respBody, &errorResp)
-		return nil, NewStructuredBRIAPIResponse(errorResp.ResponseCode, errorResp.ResponseMessage, nil)
+		return nil, NewStructuredBRIAPIResponse(errorResp.ResponseCode, errorResp.ResponseMessage)
 	}
 
 	var reportResp VirtualAccountReportResponse
@@ -242,7 +242,7 @@ func (c *Client) InquiryVirtualAccountStatus(ctx context.Context, req *InquiryVi
 	if resp.StatusCode != http.StatusOK {
 		var errorResp ErrorResponse
 		json.Unmarshal(respBody, &errorResp)
-		return nil, NewStructuredBRIAPIResponse(errorResp.ResponseCode, errorResp.ResponseMessage, nil)
+		return nil, NewStructuredBRIAPIResponse(errorResp.ResponseCode, errorResp.ResponseMessage)
 	}
 
 	var inquiryResp InquiryVirtualAccountStatusResponse
