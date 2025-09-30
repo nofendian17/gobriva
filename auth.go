@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -98,7 +99,6 @@ func (c *Client) authenticate(ctx context.Context) error {
 			ResponseMessage: errorResp.ResponseMessage,
 		}
 	}
-
 	var authResp AuthResponse
 	if err := json.Unmarshal(respBody, &authResp); err != nil {
 		return fmt.Errorf("failed to unmarshal token response: %w", err)
@@ -106,7 +106,14 @@ func (c *Client) authenticate(ctx context.Context) error {
 
 	// Store token
 	c.accessToken = authResp.AccessToken
-	c.tokenExpiry = time.Now().Add(time.Duration(authResp.ExpiresIn) * time.Second)
+
+	// Parse expires in from string to integer
+	expiresInSeconds, err := strconv.Atoi(authResp.ExpiresIn)
+	if err != nil {
+		return fmt.Errorf("failed to parse expires in value '%s': %w", authResp.ExpiresIn, err)
+	}
+
+	c.tokenExpiry = time.Now().Add(time.Duration(expiresInSeconds) * time.Second)
 
 	return nil
 }

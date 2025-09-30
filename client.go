@@ -249,7 +249,7 @@ func (c *Client) makeRequest(ctx context.Context, method, path string, body inte
 type AuthResponse struct {
 	AccessToken string `json:"accessToken"`
 	TokenType   string `json:"tokenType"`
-	ExpiresIn   int    `json:"expiresIn"`
+	ExpiresIn   string `json:"expiresIn"`
 }
 
 // ErrorResponse represents an error response from the API

@@ -3004,7 +3004,7 @@ func TestClientAuthenticateTokenRequestCreation(t *testing.T) {
 				Body: io.NopCloser(bytes.NewBufferString(`{
 					"accessToken": "test-access-token-12345",
 					"tokenType": "Bearer",
-					"expiresIn": 3600
+					"expiresIn": "3600"
 				}`)),
 				Header: make(http.Header),
 			}, nil
@@ -3044,7 +3044,7 @@ func TestClientAuthenticateTokenResponseParsing(t *testing.T) {
 				Body: io.NopCloser(bytes.NewBufferString(`{
 					"accessToken": "test-access-token-parsing",
 					"tokenType": "Bearer",
-					"expiresIn": 7200
+					"expiresIn": "7200"
 				}`)),
 				Header: make(http.Header),
 			}, nil
