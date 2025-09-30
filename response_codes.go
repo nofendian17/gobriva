@@ -3,6 +3,7 @@ package gobriva
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -32,8 +33,6 @@ type BRIResponseCode struct {
 	CaseCode    int    // Specific case within the service
 	FullCode    string // Complete 7-digit response code
 }
-
-// ParseBRIResponseCode parses a BRI response code string into structured components
 
 // String returns the full 7-digit response code
 func (rc *BRIResponseCode) String() string {
@@ -509,28 +508,47 @@ func getPendingResponseDefinition(code string) *BRIVAResponseDefinition {
 	}
 }
 
-// GetBRIVAResponseDefinitionByComponents returns response definition by structured components
-
-// StructuredBRIAPIResponse provides enhanced response information with structured response codes
+// StructuredBRIAPIResponse provides response information from the API
 type StructuredBRIAPIResponse struct {
-	ResponseCode       string                   // The actual response code from API
-	ResponseMessage    string                   // The actual response message from API
-	ResponseDefinition *BRIVAResponseDefinition // Structured response definition
-	HTTPStatusCode     int                      // HTTP status code
-	RequestID          string                   // Request ID for tracking
-	Timestamp          time.Time                // When the error occurred
+	ResponseCode    string    // The actual response code from API
+	ResponseMessage string    // The actual response message from API
+	HTTPStatusCode  int       // HTTP status code
+	Timestamp       time.Time // When the error occurred
 }
 
 // Error implements the error interface
 func (e *StructuredBRIAPIResponse) Error() string {
-	if e.ResponseDefinition != nil {
-		msg := fmt.Sprintf("BRI API Error [%s]: %s", e.ResponseCode, e.ResponseDefinition.Description)
-		if e.ResponseDefinition.Field != "" {
-			msg += fmt.Sprintf(" (field: %s)", e.ResponseDefinition.Field)
-		}
-		return msg
+	msg := fmt.Sprintf("BRI API Error [%s]: %s", e.ResponseCode, e.ResponseMessage)
+	// Try to extract field name from response message for certain error types
+	if field := e.extractFieldFromMessage(); field != "" {
+		msg += fmt.Sprintf(" (field: %s)", field)
 	}
-	return fmt.Sprintf("BRI API Error [%s]: %s", e.ResponseCode, e.ResponseMessage)
+	return msg
+}
+
+// extractFieldFromMessage attempts to extract field name from response message
+func (e *StructuredBRIAPIResponse) extractFieldFromMessage() string {
+	// Handle "Invalid Mandatory Field <fieldName>" pattern
+	if strings.HasPrefix(e.ResponseMessage, "Invalid Mandatory Field ") {
+		field := strings.TrimPrefix(e.ResponseMessage, "Invalid Mandatory Field ")
+		return field
+	}
+	// Handle "Invalid Field Format <fieldName>" pattern
+	if strings.HasPrefix(e.ResponseMessage, "Invalid Field Format ") {
+		field := strings.TrimPrefix(e.ResponseMessage, "Invalid Field Format ")
+		return field
+	}
+	// Handle "Invalid field format <fieldName>" pattern (lowercase)
+	if strings.HasPrefix(e.ResponseMessage, "Invalid field format ") {
+		field := strings.TrimPrefix(e.ResponseMessage, "Invalid field format ")
+		return field
+	}
+	// Handle "Invalid field value <fieldName>" pattern
+	if strings.HasPrefix(e.ResponseMessage, "Invalid field value ") {
+		field := strings.TrimPrefix(e.ResponseMessage, "Invalid field value ")
+		return field
+	}
+	return ""
 }
 
 // GetTimestamp returns when the error occurred
@@ -538,12 +556,18 @@ func (e *StructuredBRIAPIResponse) GetTimestamp() time.Time {
 	return e.Timestamp
 }
 
-// GetCategory returns the response category
+// GetCategory returns the response category based on HTTP status code
 func (e *StructuredBRIAPIResponse) GetCategory() HttpCategory {
-	if e.ResponseDefinition != nil {
-		return e.ResponseDefinition.Category
+	switch {
+	case e.HTTPStatusCode >= 200 && e.HTTPStatusCode < 300:
+		return CategorySuccess
+	case e.HTTPStatusCode >= 400 && e.HTTPStatusCode < 500:
+		return CategoryBadRequest
+	case e.HTTPStatusCode >= 500 && e.HTTPStatusCode < 600:
+		return CategoryInternalServerError
+	default:
+		return CategoryPending
 	}
-	return CategoryInternalServerError
 }
 
 // IsSuccess checks if this is a success response
@@ -563,22 +587,23 @@ func (e *StructuredBRIAPIResponse) IsPending() bool {
 
 // NewStructuredBRIAPIResponse creates a new structured BRI API response
 func NewStructuredBRIAPIResponse(responseCode, responseMessage string) *StructuredBRIAPIResponse {
-	definition := GetBRIVAResponseDefinition(responseCode)
-
-	// Extract HTTP status code from the definition
+	// Extract HTTP status code from response code (first 3 digits)
 	var httpStatusCode int
-	if definition != nil && definition.ResponseCode != nil {
-		httpStatusCode = definition.ResponseCode.HTTPStatus
+	if len(responseCode) >= 3 {
+		if status, err := strconv.Atoi(responseCode[0:3]); err == nil {
+			httpStatusCode = status
+		} else {
+			httpStatusCode = 500 // default fallback
+		}
 	} else {
 		httpStatusCode = 500 // default fallback
 	}
 
 	return &StructuredBRIAPIResponse{
-		ResponseCode:       responseCode,
-		ResponseMessage:    responseMessage,
-		ResponseDefinition: definition,
-		HTTPStatusCode:     httpStatusCode,
-		Timestamp:          time.Now(),
+		ResponseCode:    responseCode,
+		ResponseMessage: responseMessage,
+		HTTPStatusCode:  httpStatusCode,
+		Timestamp:       time.Now(),
 	}
 }
 

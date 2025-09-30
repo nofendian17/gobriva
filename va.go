@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"time"
 )
 
 // CreateVirtualAccount creates a new virtual account
@@ -31,15 +30,7 @@ func (c *Client) CreateVirtualAccount(ctx context.Context, req *CreateVirtualAcc
 
 	// Parse response
 	if resp.StatusCode != http.StatusOK {
-		var errorResp ErrorResponse
-		json.Unmarshal(respBody, &errorResp)
-		return nil, &StructuredBRIAPIResponse{
-			ResponseCode:       errorResp.ResponseCode,
-			ResponseMessage:    errorResp.ResponseMessage,
-			ResponseDefinition: GetBRIVAResponseDefinition(errorResp.ResponseCode),
-			HTTPStatusCode:     resp.StatusCode,
-			Timestamp:          time.Now(),
-		}
+		return nil, c.parseErrorResponse(respBody, resp.StatusCode)
 	}
 
 	var createResp CreateVirtualAccountResponse
@@ -72,15 +63,7 @@ func (c *Client) UpdateVirtualAccount(ctx context.Context, req *UpdateVirtualAcc
 
 	// Parse response
 	if resp.StatusCode != http.StatusOK {
-		var errorResp ErrorResponse
-		json.Unmarshal(respBody, &errorResp)
-		return nil, &StructuredBRIAPIResponse{
-			ResponseCode:       errorResp.ResponseCode,
-			ResponseMessage:    errorResp.ResponseMessage,
-			ResponseDefinition: GetBRIVAResponseDefinition(errorResp.ResponseCode),
-			HTTPStatusCode:     resp.StatusCode,
-			Timestamp:          time.Now(),
-		}
+		return nil, c.parseErrorResponse(respBody, resp.StatusCode)
 	}
 
 	var updateResp UpdateVirtualAccountResponse
@@ -113,15 +96,7 @@ func (c *Client) UpdateVirtualAccountStatus(ctx context.Context, req *UpdateVirt
 
 	// Parse response
 	if resp.StatusCode != http.StatusOK {
-		var errorResp ErrorResponse
-		json.Unmarshal(respBody, &errorResp)
-		return nil, &StructuredBRIAPIResponse{
-			ResponseCode:       errorResp.ResponseCode,
-			ResponseMessage:    errorResp.ResponseMessage,
-			ResponseDefinition: GetBRIVAResponseDefinition(errorResp.ResponseCode),
-			HTTPStatusCode:     resp.StatusCode,
-			Timestamp:          time.Now(),
-		}
+		return nil, c.parseErrorResponse(respBody, resp.StatusCode)
 	}
 
 	var statusResp UpdateVirtualAccountStatusResponse
@@ -154,15 +129,7 @@ func (c *Client) InquiryVirtualAccount(ctx context.Context, req *InquiryVirtualA
 
 	// Parse response
 	if resp.StatusCode != http.StatusOK {
-		var errorResp ErrorResponse
-		json.Unmarshal(respBody, &errorResp)
-		return nil, &StructuredBRIAPIResponse{
-			ResponseCode:       errorResp.ResponseCode,
-			ResponseMessage:    errorResp.ResponseMessage,
-			ResponseDefinition: GetBRIVAResponseDefinition(errorResp.ResponseCode),
-			HTTPStatusCode:     resp.StatusCode,
-			Timestamp:          time.Now(),
-		}
+		return nil, c.parseErrorResponse(respBody, resp.StatusCode)
 	}
 
 	var inquiryResp InquiryVirtualAccountResponse
@@ -195,15 +162,7 @@ func (c *Client) DeleteVirtualAccount(ctx context.Context, req *DeleteVirtualAcc
 
 	// Parse response
 	if resp.StatusCode != http.StatusOK {
-		var errorResp ErrorResponse
-		json.Unmarshal(respBody, &errorResp)
-		return nil, &StructuredBRIAPIResponse{
-			ResponseCode:       errorResp.ResponseCode,
-			ResponseMessage:    errorResp.ResponseMessage,
-			ResponseDefinition: GetBRIVAResponseDefinition(errorResp.ResponseCode),
-			HTTPStatusCode:     resp.StatusCode,
-			Timestamp:          time.Now(),
-		}
+		return nil, c.parseErrorResponse(respBody, resp.StatusCode)
 	}
 
 	var deleteResp DeleteVirtualAccountResponse
@@ -236,15 +195,7 @@ func (c *Client) GetVirtualAccountReport(ctx context.Context, req *VirtualAccoun
 
 	// Parse response
 	if resp.StatusCode != http.StatusOK {
-		var errorResp ErrorResponse
-		json.Unmarshal(respBody, &errorResp)
-		return nil, &StructuredBRIAPIResponse{
-			ResponseCode:       errorResp.ResponseCode,
-			ResponseMessage:    errorResp.ResponseMessage,
-			ResponseDefinition: GetBRIVAResponseDefinition(errorResp.ResponseCode),
-			HTTPStatusCode:     resp.StatusCode,
-			Timestamp:          time.Now(),
-		}
+		return nil, c.parseErrorResponse(respBody, resp.StatusCode)
 	}
 
 	var reportResp VirtualAccountReportResponse
@@ -277,15 +228,7 @@ func (c *Client) InquiryVirtualAccountStatus(ctx context.Context, req *InquiryVi
 
 	// Parse response
 	if resp.StatusCode != http.StatusOK {
-		var errorResp ErrorResponse
-		json.Unmarshal(respBody, &errorResp)
-		return nil, &StructuredBRIAPIResponse{
-			ResponseCode:       errorResp.ResponseCode,
-			ResponseMessage:    errorResp.ResponseMessage,
-			ResponseDefinition: GetBRIVAResponseDefinition(errorResp.ResponseCode),
-			HTTPStatusCode:     resp.StatusCode,
-			Timestamp:          time.Now(),
-		}
+		return nil, c.parseErrorResponse(respBody, resp.StatusCode)
 	}
 
 	var inquiryResp InquiryVirtualAccountStatusResponse

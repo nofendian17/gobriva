@@ -103,11 +103,11 @@ func TestClientWithMocks(t *testing.T) {
 					"responseCode": "2002700",
 					"responseMessage": "Successful",
 					"virtualAccountData": {
-						"partnerServiceId": "12345",
+						"partnerServiceId": "12345678",
 						"customerNo": "67890",
-						"virtualAccountNo": "12345678901234567890",
+						"virtualAccountNo": "1234567812345678901234567890",
 						"virtualAccountName": "Test Account",
-						"trxId": "test-trx-123",
+						"trxId": "testtrx123",
 						"totalAmount": {
 							"value": "100000.00",
 							"currency": "IDR"
@@ -144,19 +144,16 @@ func TestClientWithMocks(t *testing.T) {
 
 	// Test CreateVirtualAccount
 	req := &CreateVirtualAccountRequest{
-		PartnerServiceID:   "12345",
+		PartnerServiceID:   "12345678",
 		CustomerNo:         "67890",
-		VirtualAccountNo:   "12345678901234567890",
+		VirtualAccountNo:   "1234567812345678901234567890",
 		VirtualAccountName: "Test Account",
 		TotalAmount: Amount{
 			Value:    "100000.00",
 			Currency: "IDR",
 		},
 		ExpiredDate: "2024-12-31T23:59:59+07:00",
-		TrxID:       "test-trx-123",
-		AdditionalInfo: AdditionalInfo{
-			Description: "Test transaction",
-		},
+		TrxID:       "testtrx123",
 	}
 
 	resp, err := client.CreateVirtualAccount(context.Background(), req)
@@ -190,11 +187,11 @@ func TestClientWithDebugMode(t *testing.T) {
 					"responseCode": "2002700",
 					"responseMessage": "Successful",
 					"virtualAccountData": {
-						"partnerServiceId": "12345",
+						"partnerServiceId": "12345678",
 						"customerNo": "67890",
-						"virtualAccountNo": "12345678901234567890",
+						"virtualAccountNo": "1234567812345678901234567890",
 						"virtualAccountName": "Test Account",
-						"trxId": "test-trx-123",
+						"trxId": "testtrx123",
 						"totalAmount": {
 							"value": "100000.00",
 							"currency": "IDR"
@@ -230,16 +227,16 @@ func TestClientWithDebugMode(t *testing.T) {
 	}
 
 	req := &CreateVirtualAccountRequest{
-		PartnerServiceID:   "12345",
+		PartnerServiceID:   "12345678",
 		CustomerNo:         "67890",
-		VirtualAccountNo:   "12345678901234567890",
+		VirtualAccountNo:   "1234567812345678901234567890",
 		VirtualAccountName: "Test Account",
 		TotalAmount: Amount{
 			Value:    "100000.00",
 			Currency: "IDR",
 		},
 		ExpiredDate: "2024-12-31T23:59:59+07:00",
-		TrxID:       "test-trx-123",
+		TrxID:       "testtrx123",
 	}
 
 	resp, err := client.CreateVirtualAccount(context.Background(), req)
@@ -299,16 +296,16 @@ func TestClientWithUnknownResponseCode(t *testing.T) {
 	}
 
 	req := &CreateVirtualAccountRequest{
-		PartnerServiceID:   "12345",
+		PartnerServiceID:   "12345678",
 		CustomerNo:         "67890",
-		VirtualAccountNo:   "12345678901234567890",
+		VirtualAccountNo:   "1234567812345678901234567890",
 		VirtualAccountName: "Test Account",
 		TotalAmount: Amount{
 			Value:    "100000.00",
 			Currency: "IDR",
 		},
 		ExpiredDate: "2024-12-31T23:59:59+07:00",
-		TrxID:       "test-trx-123",
+		TrxID:       "testtrx123",
 	}
 
 	_, err := client.CreateVirtualAccount(context.Background(), req)
@@ -316,17 +313,17 @@ func TestClientWithUnknownResponseCode(t *testing.T) {
 		t.Fatal("Expected error for unknown response code")
 	}
 
-	// Check that the error is properly structured as pending
+	// Check that the error is properly structured
 	var briErr *StructuredBRIAPIResponse
 	if errors.As(err, &briErr) {
 		if briErr.ResponseCode != "9999999" {
 			t.Errorf("Expected response code '9999999', got '%s'", briErr.ResponseCode)
 		}
-		if !briErr.IsPending() {
-			t.Errorf("Expected response to be pending, but IsPending() returned false")
+		if briErr.HTTPStatusCode != 400 {
+			t.Errorf("Expected HTTP status code 400, got %d", briErr.HTTPStatusCode)
 		}
-		if briErr.GetCategory() != CategoryPending {
-			t.Errorf("Expected category 'Pending', got '%s'", briErr.GetCategory())
+		if briErr.GetCategory() != CategoryBadRequest {
+			t.Errorf("Expected category 'BadRequest', got '%s'", briErr.GetCategory())
 		}
 	}
 }
@@ -341,11 +338,11 @@ func TestUpdateVirtualAccount(t *testing.T) {
 					"responseCode": "2002700",
 					"responseMessage": "Successful",
 					"virtualAccountData": {
-						"partnerServiceId": "12345",
+						"partnerServiceId": "12345678",
 						"customerNo": "67890",
-						"virtualAccountNo": "12345678901234567890",
+						"virtualAccountNo": "1234567812345678901234567890",
 						"virtualAccountName": "Updated Account",
-						"trxId": "update-trx-123",
+						"trxId": "updatetrx123",
 						"totalAmount": {
 							"value": "150000.00",
 							"currency": "IDR"
@@ -381,19 +378,16 @@ func TestUpdateVirtualAccount(t *testing.T) {
 
 	// Test UpdateVirtualAccount
 	req := &UpdateVirtualAccountRequest{
-		PartnerServiceID:   "12345",
+		PartnerServiceID:   "12345678",
 		CustomerNo:         "67890",
-		VirtualAccountNo:   "12345678901234567890",
+		VirtualAccountNo:   "1234567812345678901234567890",
 		VirtualAccountName: "Updated Account",
 		TotalAmount: Amount{
 			Value:    "150000.00",
 			Currency: "IDR",
 		},
 		ExpiredDate: "2024-12-31T23:59:59+07:00",
-		TrxID:       "update-trx-123",
-		AdditionalInfo: AdditionalInfo{
-			Description: "Updated transaction",
-		},
+		TrxID:       "updatetrx123",
 	}
 
 	resp, err := client.UpdateVirtualAccount(context.Background(), req)
@@ -420,9 +414,9 @@ func TestUpdateVirtualAccountStatus(t *testing.T) {
 					"responseCode": "2002700",
 					"responseMessage": "Successful",
 					"virtualAccountData": {
-						"partnerServiceId": "12345",
+						"partnerServiceId": "12345678",
 						"customerNo": "67890",
-						"virtualAccountNo": "12345678901234567890",
+						"virtualAccountNo": "1234567812345678901234567890",
 						"paidStatus": "Y"
 					}
 				}`)),
@@ -455,10 +449,10 @@ func TestUpdateVirtualAccountStatus(t *testing.T) {
 
 	// Test UpdateVirtualAccountStatus
 	req := &UpdateVirtualAccountStatusRequest{
-		PartnerServiceID: "12345",
+		PartnerServiceID: "12345678",
 		CustomerNo:       "67890",
-		VirtualAccountNo: "12345678901234567890",
-		TrxID:            "status-trx-123",
+		VirtualAccountNo: "1234567812345678901234567890",
+		TrxID:            "statustrx123",
 		PaidStatus:       "Y",
 	}
 
@@ -486,11 +480,11 @@ func TestInquiryVirtualAccount(t *testing.T) {
 					"responseCode": "2002700",
 					"responseMessage": "Successful",
 					"virtualAccountData": {
-						"partnerServiceId": "12345",
+						"partnerServiceId": "12345678",
 						"customerNo": "67890",
-						"virtualAccountNo": "12345678901234567890",
+						"virtualAccountNo": "1234567812345678901234567890",
 						"virtualAccountName": "Test Account",
-						"trxId": "inquiry-trx-123",
+						"trxId": "inquirytrx123",
 						"totalAmount": {
 							"value": "100000.00",
 							"currency": "IDR"
@@ -526,10 +520,10 @@ func TestInquiryVirtualAccount(t *testing.T) {
 
 	// Test InquiryVirtualAccount
 	req := &InquiryVirtualAccountRequest{
-		PartnerServiceID: "12345",
+		PartnerServiceID: "12345678",
 		CustomerNo:       "67890",
-		VirtualAccountNo: "12345678901234567890",
-		TrxID:            "inquiry-trx-123",
+		VirtualAccountNo: "1234567812345678901234567890",
+		TrxID:            "inquirytrx123",
 	}
 
 	resp, err := client.InquiryVirtualAccount(context.Background(), req)
@@ -556,10 +550,10 @@ func TestDeleteVirtualAccount(t *testing.T) {
 					"responseCode": "2002700",
 					"responseMessage": "Successful",
 					"virtualAccountData": {
-						"partnerServiceId": "12345",
+						"partnerServiceId": "12345678",
 						"customerNo": "67890",
-						"virtualAccountNo": "12345678901234567890",
-						"trxId": "delete-trx-123"
+						"virtualAccountNo": "1234567812345678901234567890",
+						"trxId": "deletetrx123"
 					}
 				}`)),
 				Header: make(http.Header),
@@ -591,10 +585,10 @@ func TestDeleteVirtualAccount(t *testing.T) {
 
 	// Test DeleteVirtualAccount
 	req := &DeleteVirtualAccountRequest{
-		PartnerServiceID: "12345",
+		PartnerServiceID: "12345678",
 		CustomerNo:       "67890",
-		VirtualAccountNo: "12345678901234567890",
-		TrxID:            "delete-trx-123",
+		VirtualAccountNo: "1234567812345678901234567890",
+		TrxID:            "deletetrx123",
 	}
 
 	resp, err := client.DeleteVirtualAccount(context.Background(), req)
@@ -606,7 +600,7 @@ func TestDeleteVirtualAccount(t *testing.T) {
 		t.Errorf("Expected response code '2002700', got '%s'", resp.ResponseCode)
 	}
 
-	if resp.VirtualAccountData.TrxID != "delete-trx-123" {
+	if resp.VirtualAccountData.TrxID != "deletetrx123" {
 		t.Errorf("Expected trxId 'delete-trx-123', got '%s'", resp.VirtualAccountData.TrxID)
 	}
 }
@@ -622,9 +616,9 @@ func TestGetVirtualAccountReport(t *testing.T) {
 					"responseMessage": "Successful",
 					"virtualAccountData": [
 						{
-							"partnerServiceId": "12345",
+							"partnerServiceId": "12345678",
 							"customerNo": "67890",
-							"virtualAccountNo": "12345678901234567890",
+							"virtualAccountNo": "1234567812345678901234567890",
 							"virtualAccountName": "Test Account",
 							"sourceAccountNo": "1234567890",
 							"paidAmount": {
@@ -632,8 +626,8 @@ func TestGetVirtualAccountReport(t *testing.T) {
 								"currency": "IDR"
 							},
 							"trxDateTime": "2024-01-01T10:00:00+07:00",
-							"trxId": "report-trx-123",
-							"inquiryRequestId": "inq-123",
+							"trxId": "reporttrx123",
+							"inquiryRequestId": "inq123",
 							"paymentRequestId": "pay-123",
 							"totalAmount": {
 								"value": "100000.00",
@@ -671,7 +665,7 @@ func TestGetVirtualAccountReport(t *testing.T) {
 
 	// Test GetVirtualAccountReport
 	req := &VirtualAccountReportRequest{
-		PartnerServiceID: "12345",
+		PartnerServiceID: "12345678",
 		StartDate:        "2024-01-01",
 		StartTime:        "00:00:00",
 		EndTime:          "23:59:59",
@@ -691,7 +685,7 @@ func TestGetVirtualAccountReport(t *testing.T) {
 		t.Errorf("Expected 1 transaction, got %d", len(resp.VirtualAccountData))
 	}
 
-	if resp.VirtualAccountData[0].TrxID != "report-trx-123" {
+	if resp.VirtualAccountData[0].TrxID != "reporttrx123" {
 		t.Errorf("Expected trxId 'report-trx-123', got '%s'", resp.VirtualAccountData[0].TrxID)
 	}
 }
@@ -706,9 +700,9 @@ func TestInquiryVirtualAccountStatus(t *testing.T) {
 					"responseCode": "2002700",
 					"responseMessage": "Successful",
 					"virtualAccountData": {
-						"partnerServiceId": "12345",
+						"partnerServiceId": "12345678",
 						"customerNo": "67890",
-						"virtualAccountNo": "12345678901234567890",
+						"virtualAccountNo": "1234567812345678901234567890",
 						"paidStatus": "N"
 					},
 					"additionalInfo": {
@@ -744,10 +738,10 @@ func TestInquiryVirtualAccountStatus(t *testing.T) {
 
 	// Test InquiryVirtualAccountStatus
 	req := &InquiryVirtualAccountStatusRequest{
-		PartnerServiceID: "12345",
+		PartnerServiceID: "12345678",
 		CustomerNo:       "67890",
-		VirtualAccountNo: "12345678901234567890",
-		InquiryRequestID: "inq-status-123",
+		VirtualAccountNo: "1234567812345678901234567890",
+		InquiryRequestID: "inqstatus123",
 	}
 
 	resp, err := client.InquiryVirtualAccountStatus(context.Background(), req)
@@ -796,16 +790,16 @@ func TestAuthenticationFailure(t *testing.T) {
 
 	// Test CreateVirtualAccount with auth failure
 	req := &CreateVirtualAccountRequest{
-		PartnerServiceID:   "12345",
+		PartnerServiceID:   "12345678",
 		CustomerNo:         "67890",
-		VirtualAccountNo:   "12345678901234567890",
+		VirtualAccountNo:   "1234567812345678901234567890",
 		VirtualAccountName: "Test Account",
 		TotalAmount: Amount{
 			Value:    "100000.00",
 			Currency: "IDR",
 		},
 		ExpiredDate: "2024-12-31T23:59:59+07:00",
-		TrxID:       "test-trx-123",
+		TrxID:       "testtrx123",
 	}
 
 	_, err := client.CreateVirtualAccount(context.Background(), req)
@@ -857,16 +851,16 @@ func TestHTTPErrorResponse(t *testing.T) {
 
 	// Test CreateVirtualAccount with HTTP error
 	req := &CreateVirtualAccountRequest{
-		PartnerServiceID:   "12345",
+		PartnerServiceID:   "12345678",
 		CustomerNo:         "67890",
-		VirtualAccountNo:   "12345678901234567890",
+		VirtualAccountNo:   "1234567812345678901234567890",
 		VirtualAccountName: "Test Account",
 		TotalAmount: Amount{
 			Value:    "100000.00",
 			Currency: "IDR",
 		},
 		ExpiredDate: "2024-12-31T23:59:59+07:00",
-		TrxID:       "test-trx-123",
+		TrxID:       "testtrx123",
 	}
 
 	_, err := client.CreateVirtualAccount(context.Background(), req)
@@ -906,11 +900,11 @@ func TestUpdateVirtualAccountWithDebug(t *testing.T) {
 					"responseCode": "2002700",
 					"responseMessage": "Successful",
 					"virtualAccountData": {
-						"partnerServiceId": "12345",
+						"partnerServiceId": "12345678",
 						"customerNo": "67890",
-						"virtualAccountNo": "12345678901234567890",
+						"virtualAccountNo": "1234567812345678901234567890",
 						"virtualAccountName": "Updated Account",
-						"trxId": "update-trx-123",
+						"trxId": "updatetrx123",
 						"totalAmount": {
 							"value": "150000.00",
 							"currency": "IDR"
@@ -946,16 +940,16 @@ func TestUpdateVirtualAccountWithDebug(t *testing.T) {
 	}
 
 	req := &UpdateVirtualAccountRequest{
-		PartnerServiceID:   "12345",
+		PartnerServiceID:   "12345678",
 		CustomerNo:         "67890",
-		VirtualAccountNo:   "12345678901234567890",
+		VirtualAccountNo:   "1234567812345678901234567890",
 		VirtualAccountName: "Updated Account",
 		TotalAmount: Amount{
 			Value:    "150000.00",
 			Currency: "IDR",
 		},
 		ExpiredDate: "2024-12-31T23:59:59+07:00",
-		TrxID:       "update-trx-123",
+		TrxID:       "updatetrx123",
 	}
 
 	resp, err := client.UpdateVirtualAccount(context.Background(), req)
@@ -994,11 +988,11 @@ func TestInquiryVirtualAccountWithDebug(t *testing.T) {
 					"responseCode": "2002700",
 					"responseMessage": "Successful",
 					"virtualAccountData": {
-						"partnerServiceId": "12345",
+						"partnerServiceId": "12345678",
 						"customerNo": "67890",
-						"virtualAccountNo": "12345678901234567890",
+						"virtualAccountNo": "1234567812345678901234567890",
 						"virtualAccountName": "Test Account",
-						"trxId": "inquiry-trx-123",
+						"trxId": "inquirytrx123",
 						"totalAmount": {
 							"value": "100000.00",
 							"currency": "IDR"
@@ -1034,10 +1028,10 @@ func TestInquiryVirtualAccountWithDebug(t *testing.T) {
 	}
 
 	req := &InquiryVirtualAccountRequest{
-		PartnerServiceID: "12345",
+		PartnerServiceID: "12345678",
 		CustomerNo:       "67890",
-		VirtualAccountNo: "12345678901234567890",
-		TrxID:            "inquiry-trx-123",
+		VirtualAccountNo: "1234567812345678901234567890",
+		TrxID:            "inquirytrx123",
 	}
 
 	resp, err := client.InquiryVirtualAccount(context.Background(), req)
@@ -1095,7 +1089,7 @@ func TestCreateVAInvalidFieldFormat(t *testing.T) {
 	}
 
 	req := &CreateVirtualAccountRequest{
-		PartnerServiceID:   "12345",
+		PartnerServiceID:   "12345678",
 		CustomerNo:         "67890",
 		VirtualAccountNo:   "invalid-format", // Invalid format
 		VirtualAccountName: "Test Account",
@@ -1104,7 +1098,7 @@ func TestCreateVAInvalidFieldFormat(t *testing.T) {
 			Currency: "IDR",
 		},
 		ExpiredDate: "2024-12-31T23:59:59+07:00",
-		TrxID:       "test-trx-123",
+		TrxID:       "testtrx123",
 	}
 
 	_, err := client.CreateVirtualAccount(context.Background(), req)
@@ -1164,14 +1158,14 @@ func TestCreateVAInvalidMandatoryFieldPartnerServiceId(t *testing.T) {
 	req := &CreateVirtualAccountRequest{
 		PartnerServiceID:   "", // Empty mandatory field
 		CustomerNo:         "67890",
-		VirtualAccountNo:   "12345678901234567890",
+		VirtualAccountNo:   "1234567812345678901234567890",
 		VirtualAccountName: "Test Account",
 		TotalAmount: Amount{
 			Value:    "100000.00",
 			Currency: "IDR",
 		},
 		ExpiredDate: "2024-12-31T23:59:59+07:00",
-		TrxID:       "test-trx-123",
+		TrxID:       "testtrx123",
 	}
 
 	_, err := client.CreateVirtualAccount(context.Background(), req)
@@ -1237,16 +1231,16 @@ func TestCreateVAInvalidHeaderXPartnerID(t *testing.T) {
 	}
 
 	req := &CreateVirtualAccountRequest{
-		PartnerServiceID:   "12345",
+		PartnerServiceID:   "12345678",
 		CustomerNo:         "67890",
-		VirtualAccountNo:   "12345678901234567890",
+		VirtualAccountNo:   "1234567812345678901234567890",
 		VirtualAccountName: "Test Account",
 		TotalAmount: Amount{
 			Value:    "100000.00",
 			Currency: "IDR",
 		},
 		ExpiredDate: "2024-12-31T23:59:59+07:00",
-		TrxID:       "test-trx-123",
+		TrxID:       "testtrx123",
 	}
 
 	_, err := client.CreateVirtualAccount(context.Background(), req)
@@ -1304,16 +1298,16 @@ func TestCreateVAInvalidHeaderXExternalID(t *testing.T) {
 	}
 
 	req := &CreateVirtualAccountRequest{
-		PartnerServiceID:   "12345",
+		PartnerServiceID:   "12345678",
 		CustomerNo:         "67890",
-		VirtualAccountNo:   "12345678901234567890",
+		VirtualAccountNo:   "1234567812345678901234567890",
 		VirtualAccountName: "Test Account",
 		TotalAmount: Amount{
 			Value:    "100000.00",
 			Currency: "IDR",
 		},
 		ExpiredDate: "2024-12-31T23:59:59+07:00",
-		TrxID:       "test-trx-123",
+		TrxID:       "testtrx123",
 	}
 
 	_, err := client.CreateVirtualAccount(context.Background(), req)
@@ -1379,16 +1373,16 @@ func TestCreateVAInvalidHeaderChannelID(t *testing.T) {
 	}
 
 	req := &CreateVirtualAccountRequest{
-		PartnerServiceID:   "12345",
+		PartnerServiceID:   "12345678",
 		CustomerNo:         "67890",
-		VirtualAccountNo:   "12345678901234567890",
+		VirtualAccountNo:   "1234567812345678901234567890",
 		VirtualAccountName: "Test Account",
 		TotalAmount: Amount{
 			Value:    "100000.00",
 			Currency: "IDR",
 		},
 		ExpiredDate: "2024-12-31T23:59:59+07:00",
-		TrxID:       "test-trx-123",
+		TrxID:       "testtrx123",
 	}
 
 	_, err := client.CreateVirtualAccount(context.Background(), req)
@@ -1446,16 +1440,16 @@ func TestCreateVAHTTPError(t *testing.T) {
 	}
 
 	req := &CreateVirtualAccountRequest{
-		PartnerServiceID:   "12345",
+		PartnerServiceID:   "12345678",
 		CustomerNo:         "67890",
-		VirtualAccountNo:   "12345678901234567890",
+		VirtualAccountNo:   "1234567812345678901234567890",
 		VirtualAccountName: "Test Account",
 		TotalAmount: Amount{
 			Value:    "100000.00",
 			Currency: "IDR",
 		},
 		ExpiredDate: "2024-12-31T23:59:59+07:00",
-		TrxID:       "test-trx-123",
+		TrxID:       "testtrx123",
 	}
 
 	_, err := client.CreateVirtualAccount(context.Background(), req)
@@ -1506,16 +1500,16 @@ func TestCreateVANetworkError(t *testing.T) {
 	}
 
 	req := &CreateVirtualAccountRequest{
-		PartnerServiceID:   "12345",
+		PartnerServiceID:   "12345678",
 		CustomerNo:         "67890",
-		VirtualAccountNo:   "12345678901234567890",
+		VirtualAccountNo:   "1234567812345678901234567890",
 		VirtualAccountName: "Test Account",
 		TotalAmount: Amount{
 			Value:    "100000.00",
 			Currency: "IDR",
 		},
 		ExpiredDate: "2024-12-31T23:59:59+07:00",
-		TrxID:       "test-trx-123",
+		TrxID:       "testtrx123",
 	}
 
 	_, err := client.CreateVirtualAccount(context.Background(), req)
@@ -1824,21 +1818,21 @@ func TestCalculateSignatureGET(t *testing.T) {
 // Model helper function tests
 
 func TestNewCreateVirtualAccountRequest(t *testing.T) {
-	req := NewCreateVirtualAccountRequest("12345", "67890", "12345678901234567890", "Test Account", "test-trx-123", 100000.00, "IDR", "2024-12-31T23:59:59+07:00")
+	req := NewCreateVirtualAccountRequest("12345678", "67890", "1234567812345678901234567890", "Test Account", "testtrx123", 100000.00, "IDR", "2024-12-31T23:59:59+07:00")
 
-	if req.PartnerServiceID != "12345" {
+	if req.PartnerServiceID != "12345678" {
 		t.Errorf("Expected PartnerServiceID '12345', got '%s'", req.PartnerServiceID)
 	}
 	if req.CustomerNo != "67890" {
 		t.Errorf("Expected CustomerNo '67890', got '%s'", req.CustomerNo)
 	}
-	if req.VirtualAccountNo != "12345678901234567890" {
+	if req.VirtualAccountNo != "1234567812345678901234567890" {
 		t.Errorf("Expected VirtualAccountNo '12345678901234567890', got '%s'", req.VirtualAccountNo)
 	}
 	if req.VirtualAccountName != "Test Account" {
 		t.Errorf("Expected VirtualAccountName 'Test Account', got '%s'", req.VirtualAccountName)
 	}
-	if req.TrxID != "test-trx-123" {
+	if req.TrxID != "testtrx123" {
 		t.Errorf("Expected TrxID 'test-trx-123', got '%s'", req.TrxID)
 	}
 	if req.TotalAmount.Value != "100000.00" {
@@ -1853,9 +1847,9 @@ func TestNewCreateVirtualAccountRequest(t *testing.T) {
 }
 
 func TestNewUpdateVirtualAccountRequest(t *testing.T) {
-	req := NewUpdateVirtualAccountRequest("12345", "67890", "12345678901234567890", "Updated Account", "update-trx-123", 150000.00, "IDR", "2024-12-31T23:59:59+07:00")
+	req := NewUpdateVirtualAccountRequest("12345678", "67890", "1234567812345678901234567890", "Updated Account", "updatetrx123", 150000.00, "IDR", "2024-12-31T23:59:59+07:00")
 
-	if req.PartnerServiceID != "12345" {
+	if req.PartnerServiceID != "12345678" {
 		t.Errorf("Expected PartnerServiceID '12345', got '%s'", req.PartnerServiceID)
 	}
 	if req.VirtualAccountName != "Updated Account" {
@@ -1867,34 +1861,34 @@ func TestNewUpdateVirtualAccountRequest(t *testing.T) {
 }
 
 func TestNewUpdateVirtualAccountStatusRequest(t *testing.T) {
-	req := NewUpdateVirtualAccountStatusRequest("12345", "67890", "12345678901234567890", "status-trx-123", "Y")
+	req := NewUpdateVirtualAccountStatusRequest("12345678", "67890", "1234567812345678901234567890", "statustrx123", "Y")
 
-	if req.PartnerServiceID != "12345" {
+	if req.PartnerServiceID != "12345678" {
 		t.Errorf("Expected PartnerServiceID '12345', got '%s'", req.PartnerServiceID)
 	}
 	if req.PaidStatus != "Y" {
 		t.Errorf("Expected PaidStatus 'Y', got '%s'", req.PaidStatus)
 	}
-	if req.TrxID != "status-trx-123" {
+	if req.TrxID != "statustrx123" {
 		t.Errorf("Expected TrxID 'status-trx-123', got '%s'", req.TrxID)
 	}
 }
 
 func TestNewInquiryVirtualAccountRequest(t *testing.T) {
-	req := NewInquiryVirtualAccountRequest("12345", "67890", "12345678901234567890", "inquiry-trx-123")
+	req := NewInquiryVirtualAccountRequest("12345678", "67890", "1234567812345678901234567890", "inquirytrx123")
 
-	if req.PartnerServiceID != "12345" {
+	if req.PartnerServiceID != "12345678" {
 		t.Errorf("Expected PartnerServiceID '12345', got '%s'", req.PartnerServiceID)
 	}
-	if req.TrxID != "inquiry-trx-123" {
+	if req.TrxID != "inquirytrx123" {
 		t.Errorf("Expected TrxID 'inquiry-trx-123', got '%s'", req.TrxID)
 	}
 }
 
 func TestNewVirtualAccountReportRequest(t *testing.T) {
-	req := NewVirtualAccountReportRequest("12345", "2024-01-01", "00:00:00", "23:59:59")
+	req := NewVirtualAccountReportRequest("12345678", "2024-01-01", "00:00:00", "23:59:59")
 
-	if req.PartnerServiceID != "12345" {
+	if req.PartnerServiceID != "12345678" {
 		t.Errorf("Expected PartnerServiceID '12345', got '%s'", req.PartnerServiceID)
 	}
 	if req.StartDate != "2024-01-01" {
@@ -2003,15 +1997,11 @@ func TestBRIResponseCode_Getters(t *testing.T) {
 func TestStructuredBRIAPIResponse_Error(t *testing.T) {
 	resp := &StructuredBRIAPIResponse{
 		ResponseCode:    "4002701",
-		ResponseMessage: "Invalid field format",
-		ResponseDefinition: &BRIVAResponseDefinition{
-			ResponseCode: &BRIResponseCode{FullCode: "4002701"},
-			Description:  "Invalid field format",
-			Field:        "virtualAccountNo",
-		},
+		ResponseMessage: "Invalid field format virtualAccountNo",
+		HTTPStatusCode:  400,
 	}
 
-	expected := "BRI API Error [4002701]: Invalid field format (field: virtualAccountNo)"
+	expected := "BRI API Error [4002701]: Invalid field format virtualAccountNo (field: virtualAccountNo)"
 	if resp.Error() != expected {
 		t.Errorf("Expected error message '%s', got '%s'", expected, resp.Error())
 	}
@@ -2024,6 +2014,19 @@ func TestStructuredBRIAPIResponse_ErrorNoDefinition(t *testing.T) {
 	}
 
 	expected := "BRI API Error [4002701]: Invalid field format"
+	if resp.Error() != expected {
+		t.Errorf("Expected error message '%s', got '%s'", expected, resp.Error())
+	}
+}
+
+func TestStructuredBRIAPIResponse_ErrorWithFieldExtraction(t *testing.T) {
+	resp := &StructuredBRIAPIResponse{
+		ResponseCode:    "4002702",
+		ResponseMessage: "Invalid Mandatory Field institutionCode",
+		HTTPStatusCode:  400,
+	}
+
+	expected := "BRI API Error [4002702]: Invalid Mandatory Field institutionCode (field: institutionCode)"
 	if resp.Error() != expected {
 		t.Errorf("Expected error message '%s', got '%s'", expected, resp.Error())
 	}
@@ -2047,9 +2050,7 @@ func TestStructuredBRIAPIResponse_GetTimestamp(t *testing.T) {
 
 func TestStructuredBRIAPIResponse_GetCategory(t *testing.T) {
 	resp := &StructuredBRIAPIResponse{
-		ResponseDefinition: &BRIVAResponseDefinition{
-			Category: CategoryBadRequest,
-		},
+		HTTPStatusCode: 400,
 	}
 
 	if resp.GetCategory() != CategoryBadRequest {
@@ -2058,7 +2059,9 @@ func TestStructuredBRIAPIResponse_GetCategory(t *testing.T) {
 }
 
 func TestStructuredBRIAPIResponse_GetCategoryNoDefinition(t *testing.T) {
-	resp := &StructuredBRIAPIResponse{}
+	resp := &StructuredBRIAPIResponse{
+		HTTPStatusCode: 500,
+	}
 
 	if resp.GetCategory() != CategoryInternalServerError {
 		t.Error("Expected GetCategory to return CategoryInternalServerError when no definition")
@@ -2095,15 +2098,11 @@ func TestStructuredBRIAPIResponse_IsClientError(t *testing.T) {
 
 func TestStructuredBRIAPIResponse_IsPending(t *testing.T) {
 	pendingResp := &StructuredBRIAPIResponse{
-		ResponseDefinition: &BRIVAResponseDefinition{
-			Category: CategoryPending,
-		},
+		HTTPStatusCode: 999, // Non-standard status maps to CategoryPending
 	}
 
 	successResp := &StructuredBRIAPIResponse{
-		ResponseDefinition: &BRIVAResponseDefinition{
-			Category: CategorySuccess,
-		},
+		HTTPStatusCode: 200,
 	}
 
 	if !pendingResp.IsPending() {
@@ -2337,16 +2336,16 @@ func TestCreateVirtualAccountJSONUnmarshalError(t *testing.T) {
 	}
 
 	req := &CreateVirtualAccountRequest{
-		PartnerServiceID:   "12345",
+		PartnerServiceID:   "12345678",
 		CustomerNo:         "67890",
-		VirtualAccountNo:   "12345678901234567890",
+		VirtualAccountNo:   "1234567812345678901234567890",
 		VirtualAccountName: "Test Account",
 		TotalAmount: Amount{
 			Value:    "100000.00",
 			Currency: "IDR",
 		},
 		ExpiredDate: "2024-12-31T23:59:59+07:00",
-		TrxID:       "test-trx-123",
+		TrxID:       "testtrx123",
 	}
 
 	_, err := client.CreateVirtualAccount(context.Background(), req)
@@ -2390,16 +2389,16 @@ func TestUpdateVirtualAccountJSONUnmarshalError(t *testing.T) {
 	}
 
 	req := &UpdateVirtualAccountRequest{
-		PartnerServiceID:   "12345",
+		PartnerServiceID:   "12345678",
 		CustomerNo:         "67890",
-		VirtualAccountNo:   "12345678901234567890",
+		VirtualAccountNo:   "1234567812345678901234567890",
 		VirtualAccountName: "Updated Account",
 		TotalAmount: Amount{
 			Value:    "150000.00",
 			Currency: "IDR",
 		},
 		ExpiredDate: "2024-12-31T23:59:59+07:00",
-		TrxID:       "update-trx-123",
+		TrxID:       "updatetrx123",
 	}
 
 	_, err := client.UpdateVirtualAccount(context.Background(), req)
@@ -2443,10 +2442,10 @@ func TestUpdateVirtualAccountStatusJSONUnmarshalError(t *testing.T) {
 	}
 
 	req := &UpdateVirtualAccountStatusRequest{
-		PartnerServiceID: "12345",
+		PartnerServiceID: "12345678",
 		CustomerNo:       "67890",
-		VirtualAccountNo: "12345678901234567890",
-		TrxID:            "status-trx-123",
+		VirtualAccountNo: "1234567812345678901234567890",
+		TrxID:            "statustrx123",
 		PaidStatus:       "Y",
 	}
 
@@ -2491,10 +2490,10 @@ func TestInquiryVirtualAccountJSONUnmarshalError(t *testing.T) {
 	}
 
 	req := &InquiryVirtualAccountRequest{
-		PartnerServiceID: "12345",
+		PartnerServiceID: "12345678",
 		CustomerNo:       "67890",
-		VirtualAccountNo: "12345678901234567890",
-		TrxID:            "inquiry-trx-123",
+		VirtualAccountNo: "1234567812345678901234567890",
+		TrxID:            "inquirytrx123",
 	}
 
 	_, err := client.InquiryVirtualAccount(context.Background(), req)
@@ -2538,10 +2537,10 @@ func TestDeleteVirtualAccountJSONUnmarshalError(t *testing.T) {
 	}
 
 	req := &DeleteVirtualAccountRequest{
-		PartnerServiceID: "12345",
+		PartnerServiceID: "12345678",
 		CustomerNo:       "67890",
-		VirtualAccountNo: "12345678901234567890",
-		TrxID:            "delete-trx-123",
+		VirtualAccountNo: "1234567812345678901234567890",
+		TrxID:            "deletetrx123",
 	}
 
 	_, err := client.DeleteVirtualAccount(context.Background(), req)
@@ -2585,7 +2584,7 @@ func TestGetVirtualAccountReportJSONUnmarshalError(t *testing.T) {
 	}
 
 	req := &VirtualAccountReportRequest{
-		PartnerServiceID: "12345",
+		PartnerServiceID: "12345678",
 		StartDate:        "2024-01-01",
 		StartTime:        "00:00:00",
 		EndTime:          "23:59:59",
@@ -2633,10 +2632,10 @@ func TestInquiryVirtualAccountStatusJSONUnmarshalError(t *testing.T) {
 	}
 
 	req := &InquiryVirtualAccountStatusRequest{
-		PartnerServiceID: "12345",
+		PartnerServiceID: "12345678",
 		CustomerNo:       "67890",
-		VirtualAccountNo: "12345678901234567890",
-		InquiryRequestID: "inq-status-123",
+		VirtualAccountNo: "1234567812345678901234567890",
+		InquiryRequestID: "inqstatus123",
 	}
 
 	_, err := client.InquiryVirtualAccountStatus(context.Background(), req)
@@ -2679,11 +2678,11 @@ func TestEndToEndVAWorkflow(t *testing.T) {
 					"responseCode": "2002700",
 					"responseMessage": "Successful",
 					"virtualAccountData": {
-						"partnerServiceId": "12345",
+						"partnerServiceId": "12345678",
 						"customerNo": "67890",
-						"virtualAccountNo": "12345678901234567890",
+						"virtualAccountNo": "1234567812345678901234567890",
 						"virtualAccountName": "Test Account",
-						"trxId": "test-trx-123"
+						"trxId": "testtrx123"
 					}
 				}`)),
 				Header: make(http.Header),
@@ -2712,16 +2711,16 @@ func TestEndToEndVAWorkflow(t *testing.T) {
 
 	// Test Create
 	createReq := &CreateVirtualAccountRequest{
-		PartnerServiceID:   "12345",
+		PartnerServiceID:   "12345678",
 		CustomerNo:         "67890",
-		VirtualAccountNo:   "12345678901234567890",
+		VirtualAccountNo:   "1234567812345678901234567890",
 		VirtualAccountName: "Test Account",
 		TotalAmount: Amount{
 			Value:    "100000.00",
 			Currency: "IDR",
 		},
 		ExpiredDate: "2024-12-31T23:59:59+07:00",
-		TrxID:       "test-trx-123",
+		TrxID:       "testtrx123",
 	}
 
 	createResp, err := client.CreateVirtualAccount(context.Background(), createReq)
@@ -2734,16 +2733,16 @@ func TestEndToEndVAWorkflow(t *testing.T) {
 
 	// Test Update
 	updateReq := &UpdateVirtualAccountRequest{
-		PartnerServiceID:   "12345",
+		PartnerServiceID:   "12345678",
 		CustomerNo:         "67890",
-		VirtualAccountNo:   "12345678901234567890",
+		VirtualAccountNo:   "1234567812345678901234567890",
 		VirtualAccountName: "Updated Account",
 		TotalAmount: Amount{
 			Value:    "150000.00",
 			Currency: "IDR",
 		},
 		ExpiredDate: "2024-12-31T23:59:59+07:00",
-		TrxID:       "update-trx-123",
+		TrxID:       "updatetrx123",
 	}
 
 	updateResp, err := client.UpdateVirtualAccount(context.Background(), updateReq)
@@ -2756,10 +2755,10 @@ func TestEndToEndVAWorkflow(t *testing.T) {
 
 	// Test Inquiry
 	inquiryReq := &InquiryVirtualAccountRequest{
-		PartnerServiceID: "12345",
+		PartnerServiceID: "12345678",
 		CustomerNo:       "67890",
-		VirtualAccountNo: "12345678901234567890",
-		TrxID:            "inquiry-trx-123",
+		VirtualAccountNo: "1234567812345678901234567890",
+		TrxID:            "inquirytrx123",
 	}
 
 	inquiryResp, err := client.InquiryVirtualAccount(context.Background(), inquiryReq)
@@ -2772,10 +2771,10 @@ func TestEndToEndVAWorkflow(t *testing.T) {
 
 	// Test Delete
 	deleteReq := &DeleteVirtualAccountRequest{
-		PartnerServiceID: "12345",
+		PartnerServiceID: "12345678",
 		CustomerNo:       "67890",
-		VirtualAccountNo: "12345678901234567890",
-		TrxID:            "delete-trx-123",
+		VirtualAccountNo: "1234567812345678901234567890",
+		TrxID:            "deletetrx123",
 	}
 
 	deleteResp, err := client.DeleteVirtualAccount(context.Background(), deleteReq)
@@ -2798,9 +2797,9 @@ func TestVAStatusWorkflow(t *testing.T) {
 					"responseCode": "2002700",
 					"responseMessage": "Successful",
 					"virtualAccountData": {
-						"partnerServiceId": "12345",
+						"partnerServiceId": "12345678",
 						"customerNo": "67890",
-						"virtualAccountNo": "12345678901234567890",
+						"virtualAccountNo": "1234567812345678901234567890",
 						"paidStatus": "Y"
 					}
 				}`)),
@@ -2830,10 +2829,10 @@ func TestVAStatusWorkflow(t *testing.T) {
 
 	// Test Update Status
 	statusReq := &UpdateVirtualAccountStatusRequest{
-		PartnerServiceID: "12345",
+		PartnerServiceID: "12345678",
 		CustomerNo:       "67890",
-		VirtualAccountNo: "12345678901234567890",
-		TrxID:            "status-trx-123",
+		VirtualAccountNo: "1234567812345678901234567890",
+		TrxID:            "statustrx123",
 		PaidStatus:       "Y",
 	}
 
@@ -2850,10 +2849,10 @@ func TestVAStatusWorkflow(t *testing.T) {
 
 	// Test Status Inquiry
 	inquiryStatusReq := &InquiryVirtualAccountStatusRequest{
-		PartnerServiceID: "12345",
+		PartnerServiceID: "12345678",
 		CustomerNo:       "67890",
-		VirtualAccountNo: "12345678901234567890",
-		InquiryRequestID: "inq-status-123",
+		VirtualAccountNo: "1234567812345678901234567890",
+		InquiryRequestID: "inqstatus123",
 	}
 
 	inquiryStatusResp, err := client.InquiryVirtualAccountStatus(context.Background(), inquiryStatusReq)
@@ -2879,9 +2878,9 @@ func TestVAReportWorkflow(t *testing.T) {
 					"responseMessage": "Successful",
 					"virtualAccountData": [
 						{
-							"partnerServiceId": "12345",
+							"partnerServiceId": "12345678",
 							"customerNo": "67890",
-							"virtualAccountNo": "12345678901234567890",
+							"virtualAccountNo": "1234567812345678901234567890",
 							"virtualAccountName": "Test Account",
 							"sourceAccountNo": "1234567890",
 							"paidAmount": {
@@ -2889,8 +2888,8 @@ func TestVAReportWorkflow(t *testing.T) {
 								"currency": "IDR"
 							},
 							"trxDateTime": "2024-01-01T10:00:00+07:00",
-							"trxId": "report-trx-123",
-							"inquiryRequestId": "inq-123",
+							"trxId": "reporttrx123",
+							"inquiryRequestId": "inq123",
 							"paymentRequestId": "pay-123",
 							"totalAmount": {
 								"value": "100000.00",
@@ -2925,7 +2924,7 @@ func TestVAReportWorkflow(t *testing.T) {
 
 	// Test Get Report
 	reportReq := &VirtualAccountReportRequest{
-		PartnerServiceID: "12345",
+		PartnerServiceID: "12345678",
 		StartDate:        "2024-01-01",
 		StartTime:        "00:00:00",
 		EndTime:          "23:59:59",
@@ -2942,7 +2941,7 @@ func TestVAReportWorkflow(t *testing.T) {
 	if len(reportResp.VirtualAccountData) != 1 {
 		t.Errorf("Expected 1 transaction, got %d", len(reportResp.VirtualAccountData))
 	}
-	if reportResp.VirtualAccountData[0].TrxID != "report-trx-123" {
+	if reportResp.VirtualAccountData[0].TrxID != "reporttrx123" {
 		t.Errorf("Expected trxId 'report-trx-123', got '%s'", reportResp.VirtualAccountData[0].TrxID)
 	}
 }

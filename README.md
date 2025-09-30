@@ -12,21 +12,24 @@ A Go library for integrating with BRI's BRIVA WS SNAP BI API.
 - **HMAC-SHA512 request signing** - Cryptographic request integrity verification
 - **Production and sandbox environments** - Environment-specific configuration support
 - **Interface-based design for testability** - Dependency injection for comprehensive testing
-- **Comprehensive test suite** - 75+ unit tests with 81% code coverage
+- **Comprehensive test suite** - 76+ unit tests with high code coverage
 - **Debug mode** for HTTP request/response logging with timing measurements
-- **Enhanced error handling** with detailed suggestions and severity levels
-- **Comprehensive response code definitions** - Built-in BRI API response code handling
+- **Simplified error handling** - Direct parsing from API responses with automatic field extraction
+- **HTTP status code-based categorization** - Standard error categorization without complex mappings
+- **Context support** - All operations support context for cancellation and timeouts
 
 ## Table of Contents
 
 - [Installation](#installation)
 - [Quick Start](#quick-start)
+- [Usage Examples](#usage-examples)
 - [Architecture](#architecture)
 - [Configuration](#configuration)
 - [API Reference](#api-reference)
 - [Error Handling](#error-handling)
 - [Testing](#testing)
 - [Security](#security)
+- [Performance](#performance)
 - [Development](#development)
 - [License](#license)
 
@@ -50,11 +53,16 @@ package main
 import (
 	"context"
 	"log"
+	"log/slog"
 
-	"gobriva"
+	"github.com/nofendian17/gobriva"
 )
 
 func main() {
+	// Optional: create a custom slog.Logger and pass it to the client so the
+	// library logs use your application's logger (no global changes necessary).
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
+
 	client := gobriva.NewClient(gobriva.Config{
 		PartnerID:    "your-partner-id",
 		ClientID:     "your-client-id",
@@ -63,6 +71,7 @@ func main() {
 		ChannelID:    "your-channel-id",
 		IsSandbox:    true,
 		Debug:        true,
+		Logger:       logger, // pass your logger here
 	})
 
 	// Create a virtual account
@@ -85,6 +94,337 @@ func main() {
 	}
 
 	log.Printf("Created VA: %s", resp.VirtualAccountData.VirtualAccountNo)
+}
+```
+
+## Usage Examples
+
+### Complete Virtual Account Workflow
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"time"
+
+	"github.com/nofendian17/gobriva"
+)
+
+func main() {
+	client := gobriva.NewClient(gobriva.Config{
+		PartnerID:    "your-partner-id",
+		ClientID:     "your-client-id",
+		ClientSecret: "your-client-secret",
+		PrivateKey:   "your-private-key-pem",
+		ChannelID:    "your-channel-id",
+		IsSandbox:    true,
+		Debug:        true,
+	})
+
+	ctx := context.Background()
+
+	// 1. Create Virtual Account
+	createReq := gobriva.NewCreateVirtualAccountRequest(
+		"12345",                    // partnerServiceID
+		"CUST001",                  // customerNo
+		"12345678901234567890",     // virtualAccountNo
+		"John Doe - Invoice #001",  // virtualAccountName
+		"TRX001",                   // trxID
+		100000.00,                  // amount
+		"IDR",                      // currency
+		"2024-12-31T23:59:59+07:00", // expiredDate
+	)
+
+	va, err := client.CreateVirtualAccount(ctx, createReq)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("Created VA: %s\n", va.VirtualAccountData.VirtualAccountNo)
+
+	// 2. Update Virtual Account
+	updateReq := gobriva.NewUpdateVirtualAccountRequest(
+		"12345",                    // partnerServiceID
+		"CUST001",                  // customerNo
+		"12345678901234567890",     // virtualAccountNo
+		"John Doe - Invoice #001",  // virtualAccountName
+		"TRX001",                   // trxID
+		150000.00,                  // updated amount
+		"IDR",                      // currency
+		"2024-12-31T23:59:59+07:00", // expiredDate
+	)
+
+	updatedVA, err := client.UpdateVirtualAccount(ctx, updateReq)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("Updated VA: %s\n", updatedVA.VirtualAccountData.VirtualAccountNo)
+
+	// 3. Inquiry Virtual Account
+	inquiryReq := gobriva.NewInquiryVirtualAccountRequest(
+		"12345",                // partnerServiceID
+		"CUST001",              // customerNo
+		"12345678901234567890", // virtualAccountNo
+		"TRX002",               // trxID
+	)
+
+	vaInfo, err := client.InquiryVirtualAccount(ctx, inquiryReq)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("VA Info: %+v\n", vaInfo)
+
+	// 4. Update Status to Paid
+	statusReq := gobriva.NewUpdateVirtualAccountStatusRequest(
+		"12345",                // partnerServiceID
+		"CUST001",              // customerNo
+		"12345678901234567890", // virtualAccountNo
+		"TRX003",               // trxID
+		"Y",                    // paidStatus (Y=paid, N=unpaid)
+	)
+
+	statusResp, err := client.UpdateVirtualAccountStatus(ctx, statusReq)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("Status updated: %s\n", statusResp.ResponseMessage)
+
+	// 5. Get Transaction Report
+	reportReq := gobriva.NewVirtualAccountReportRequest(
+		"12345",     // partnerServiceID
+		"2024-01-01", // startDate
+		"00:00:00",   // startTime
+		"23:59:59",   // endTime
+	)
+
+	report, err := client.GetVirtualAccountReport(ctx, reportReq)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("Found %d transactions\n", len(report.VirtualAccountData))
+}
+```
+
+### Error Handling with Field Extraction
+
+```go
+package main
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"log"
+
+	"github.com/nofendian17/gobriva"
+)
+
+func handleVirtualAccountError(err error) {
+	var briErr *gobriva.StructuredBRIAPIResponse
+	if errors.As(err, &briErr) {
+		fmt.Printf("BRI API Error [%s]: %s\n", briErr.ResponseCode, briErr.ResponseMessage)
+		fmt.Printf("HTTP Status: %d\n", briErr.HTTPStatusCode)
+		fmt.Printf("Category: %s\n", briErr.GetCategory())
+
+		// Check error type
+		switch briErr.GetCategory() {
+		case gobriva.CategoryBadRequest:
+			fmt.Println("Bad request - check your input data")
+			if briErr.IsClientError() {
+				fmt.Println("Client error (4xx) - validate request parameters")
+			}
+		case gobriva.CategoryUnauthorized:
+			fmt.Println("Authentication failed - check credentials")
+		case gobriva.CategoryInternalServerError:
+			fmt.Println("Server error - retry later or contact support")
+		case gobriva.CategoryPending:
+			fmt.Println("Unknown response code - manual verification required")
+		}
+
+		// The error message automatically includes field extraction
+		fmt.Printf("Full error: %s\n", briErr.Error())
+	}
+}
+
+func main() {
+	client := gobriva.NewClient(gobriva.Config{
+		PartnerID:    "your-partner-id",
+		ClientID:     "your-client-id",
+		ClientSecret: "your-client-secret",
+		PrivateKey:   "your-private-key-pem",
+		ChannelID:    "your-channel-id",
+		IsSandbox:    true,
+	})
+
+	// Example with invalid data (will trigger field extraction)
+	req := &gobriva.CreateVirtualAccountRequest{
+		PartnerServiceID:   "", // Empty - will cause error
+		CustomerNo:         "CUST001",
+		VirtualAccountNo:   "12345678901234567890",
+		VirtualAccountName: "Test Account",
+		TotalAmount: gobriva.Amount{
+			Value:    "100000.00",
+			Currency: "IDR",
+		},
+		ExpiredDate: "2024-12-31T23:59:59+07:00",
+		TrxID:       "TRX001",
+	}
+
+	_, err := client.CreateVirtualAccount(context.Background(), req)
+	if err != nil {
+		handleVirtualAccountError(err)
+	}
+}
+```
+
+### Custom HTTP Client and Timeouts
+
+```go
+package main
+
+import (
+	"context"
+	"crypto/tls"
+	"net/http"
+	"time"
+
+	"github.com/nofendian17/gobriva"
+)
+
+func main() {
+	// Custom HTTP client with timeout and TLS config
+	httpClient := &http.Client{
+		Timeout: 30 * time.Second,
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: false, // Set to true for testing only
+			},
+			MaxIdleConns:        100,
+			MaxIdleConnsPerHost: 10,
+			IdleConnTimeout:     90 * time.Second,
+		},
+	}
+
+	client := gobriva.NewClient(gobriva.Config{
+		PartnerID:    "your-partner-id",
+		ClientID:     "your-client-id",
+		ClientSecret: "your-client-secret",
+		PrivateKey:   "your-private-key-pem",
+		ChannelID:    "your-channel-id",
+		IsSandbox:    true,
+		Debug:        false,
+		HTTPClient:   httpClient, // Use custom HTTP client
+	})
+
+	// Use context with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
+	defer cancel()
+
+	req := gobriva.NewCreateVirtualAccountRequest(
+		"12345", "CUST001", "12345678901234567890",
+		"Test Account", "TRX001", 100000.00, "IDR",
+		"2024-12-31T23:59:59+07:00",
+	)
+
+	resp, err := client.CreateVirtualAccount(ctx, req)
+	if err != nil {
+		// Handle error
+		return
+	}
+
+	fmt.Printf("Created VA: %s\n", resp.VirtualAccountData.VirtualAccountNo)
+}
+```
+
+### Testing with Mock Dependencies
+
+```go
+package main
+
+import (
+	"bytes"
+	"context"
+	"io"
+	"net/http"
+	"testing"
+
+	"github.com/nofendian17/gobriva"
+)
+
+// MockHTTPClient for testing
+type MockHTTPClient struct {
+	DoFunc func(*http.Request) (*http.Response, error)
+}
+
+func (m *MockHTTPClient) Do(req *http.Request) (*http.Response, error) {
+	return m.DoFunc(req)
+}
+
+// MockAuthenticator for testing
+type MockAuthenticator struct {
+	EnsureAuthenticatedFunc func(context.Context) error
+}
+
+func (m *MockAuthenticator) EnsureAuthenticated(ctx context.Context) error {
+	return m.EnsureAuthenticatedFunc(ctx)
+}
+
+func TestCreateVirtualAccount(t *testing.T) {
+	mockHTTP := &MockHTTPClient{
+		DoFunc: func(req *http.Request) (*http.Response, error) {
+			return &http.Response{
+				StatusCode: 200,
+				Body: io.NopCloser(bytes.NewBufferString(`{
+					"responseCode": "2002700",
+					"responseMessage": "Success",
+					"virtualAccountData": {
+						"partnerServiceId": "12345",
+						"customerNo": "CUST001",
+						"virtualAccountNo": "12345678901234567890",
+						"virtualAccountName": "Test Account",
+						"totalAmount": {"value": "100000.00", "currency": "IDR"},
+						"expiredDate": "2024-12-31T23:59:59+07:00",
+						"trxId": "TRX001"
+					}
+				}`)),
+				Header: make(http.Header),
+			}, nil
+		},
+	}
+
+	mockAuth := &MockAuthenticator{
+		EnsureAuthenticatedFunc: func(ctx context.Context) error {
+			return nil
+		},
+	}
+
+	client := gobriva.NewClient(gobriva.Config{
+		PartnerID:     "test-partner",
+		ClientID:      "test-client",
+		ClientSecret:  "test-secret",
+		PrivateKey:    "test-key",
+		ChannelID:     "test-channel",
+		IsSandbox:     true,
+		HTTPClient:    mockHTTP,
+		Authenticator: mockAuth,
+	})
+
+	req := gobriva.NewCreateVirtualAccountRequest(
+		"12345", "CUST001", "12345678901234567890",
+		"Test Account", "TRX001", 100000.00, "IDR",
+		"2024-12-31T23:59:59+07:00",
+	)
+
+	resp, err := client.CreateVirtualAccount(context.Background(), req)
+	if err != nil {
+		t.Fatalf("Expected success, got error: %v", err)
+	}
+
+	if resp.VirtualAccountData.VirtualAccountNo != "12345678901234567890" {
+		t.Errorf("Expected VA number '12345678901234567890', got '%s'", resp.VirtualAccountData.VirtualAccountNo)
+	}
 }
 ```
 
@@ -138,6 +478,7 @@ type Config struct {
 	IsSandbox     bool
 	Timeout       time.Duration
 	Debug         bool          // Enable debug logging for HTTP requests/responses
+	Logger        *slog.Logger  // Optional: pass a custom slog.Logger; client will use it locally
 	HTTPClient    HTTPClient    // Optional: custom HTTP client for testing
 	Authenticator Authenticator // Optional: custom authenticator for testing
 }
@@ -166,6 +507,14 @@ MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC...
 
 ## API Reference
 
+### Client Creation
+
+```go
+func NewClient(config Config) *Client
+```
+
+Creates a new BRI Virtual Account client with the provided configuration.
+
 ### Virtual Account Operations
 
 #### CreateVirtualAccount
@@ -176,19 +525,34 @@ Creates a new virtual account.
 func (c *Client) CreateVirtualAccount(ctx context.Context, req *CreateVirtualAccountRequest) (*CreateVirtualAccountResponse, error)
 ```
 
-**Request:**
+**Request Construction:**
 
 ```go
-type CreateVirtualAccountRequest struct {
-	PartnerServiceID   string         `json:"partnerServiceId"`
-	CustomerNo         string         `json:"customerNo"`
-	VirtualAccountNo   string         `json:"virtualAccountNo"`
-	VirtualAccountName string         `json:"virtualAccountName"`
-	TotalAmount        Amount         `json:"totalAmount"`
-	ExpiredDate        string         `json:"expiredDate"`
-	TrxID              string         `json:"trxId"`
-	AdditionalInfo     AdditionalInfo `json:"additionalInfo,omitempty"`
+// Using struct
+req := &CreateVirtualAccountRequest{
+    PartnerServiceID:   "12345",
+    CustomerNo:         "CUST001",
+    VirtualAccountNo:   "12345678901234567890",
+    VirtualAccountName: "John Doe",
+    TotalAmount: Amount{
+        Value:    "100000.00",
+        Currency: "IDR",
+    },
+    ExpiredDate: "2024-12-31T23:59:59+07:00",
+    TrxID:       "TRX001",
 }
+
+// Using helper function
+req := NewCreateVirtualAccountRequest(
+    "12345",                // partnerServiceID
+    "CUST001",              // customerNo
+    "12345678901234567890", // virtualAccountNo
+    "John Doe",             // virtualAccountName
+    "TRX001",               // trxID
+    100000.00,              // amount
+    "IDR",                  // currency
+    "2024-12-31T23:59:59+07:00", // expiredDate
+)
 ```
 
 #### UpdateVirtualAccount
@@ -199,12 +563,39 @@ Updates an existing virtual account.
 func (c *Client) UpdateVirtualAccount(ctx context.Context, req *UpdateVirtualAccountRequest) (*UpdateVirtualAccountResponse, error)
 ```
 
+**Request Construction:**
+
+```go
+req := NewUpdateVirtualAccountRequest(
+    "12345",                // partnerServiceID
+    "CUST001",              // customerNo
+    "12345678901234567890", // virtualAccountNo
+    "John Doe Updated",     // virtualAccountName
+    "TRX002",               // trxID
+    150000.00,              // amount
+    "IDR",                  // currency
+    "2024-12-31T23:59:59+07:00", // expiredDate
+)
+```
+
 #### UpdateVirtualAccountStatus
 
-Updates the status of a virtual account.
+Updates the payment status of a virtual account.
 
 ```go
 func (c *Client) UpdateVirtualAccountStatus(ctx context.Context, req *UpdateVirtualAccountStatusRequest) (*UpdateVirtualAccountStatusResponse, error)
+```
+
+**Request Construction:**
+
+```go
+req := NewUpdateVirtualAccountStatusRequest(
+    "12345",                // partnerServiceID
+    "CUST001",              // customerNo
+    "12345678901234567890", // virtualAccountNo
+    "TRX003",               // trxID
+    "Y",                    // paidStatus ("Y" = paid, "N" = unpaid)
+)
 ```
 
 #### InquiryVirtualAccount
@@ -215,9 +606,20 @@ Retrieves information about a virtual account.
 func (c *Client) InquiryVirtualAccount(ctx context.Context, req *InquiryVirtualAccountRequest) (*InquiryVirtualAccountResponse, error)
 ```
 
+**Request Construction:**
+
+```go
+req := NewInquiryVirtualAccountRequest(
+    "12345",                // partnerServiceID
+    "CUST001",              // customerNo
+    "12345678901234567890", // virtualAccountNo
+    "TRX004",               // trxID
+)
+```
+
 #### InquiryVirtualAccountStatus
 
-Retrieves the status of a virtual account.
+Retrieves the payment status of a virtual account.
 
 ```go
 func (c *Client) InquiryVirtualAccountStatus(ctx context.Context, req *InquiryVirtualAccountStatusRequest) (*InquiryVirtualAccountStatusResponse, error)
@@ -233,10 +635,21 @@ func (c *Client) DeleteVirtualAccount(ctx context.Context, req *DeleteVirtualAcc
 
 #### GetVirtualAccountReport
 
-Retrieves transaction reports for virtual accounts.
+Retrieves transaction reports for virtual accounts within a date range.
 
 ```go
 func (c *Client) GetVirtualAccountReport(ctx context.Context, req *VirtualAccountReportRequest) (*VirtualAccountReportResponse, error)
+```
+
+**Request Construction:**
+
+```go
+req := NewVirtualAccountReportRequest(
+    "12345",     // partnerServiceID
+    "2024-01-01", // startDate (YYYY-MM-DD)
+    "00:00:00",   // startTime (HH:MM:SS)
+    "23:59:59",   // endTime (HH:MM:SS)
+)
 ```
 
 ### Common Types
@@ -260,7 +673,7 @@ type AdditionalInfo struct {
 
 ## Error Handling
 
-The library provides comprehensive error handling with structured error types.
+The library provides comprehensive error handling with structured error types that parse directly from API responses.
 
 ### Error Types
 
@@ -268,14 +681,16 @@ The library provides comprehensive error handling with structured error types.
 
 ```go
 type StructuredBRIAPIResponse struct {
-	HTTPStatusCode    int
-	ResponseCode      string
-	ResponseMessage   string
-	ResponseDefinition *BRIVAResponseDefinition
+	ResponseCode    string    // The actual response code from API
+	ResponseMessage string    // The actual response message from API
+	HTTPStatusCode  int       // HTTP status code
+	Timestamp       time.Time // When the error occurred
 }
 ```
 
 ### Error Categories
+
+Errors are categorized based on HTTP status codes:
 
 - `Success` - Successful operations (2xx)
 - `BadRequest` - Invalid request data (4xx)
@@ -292,9 +707,9 @@ type StructuredBRIAPIResponse struct {
 ### Error Methods
 
 ```go
-func (e *StructuredBRIAPIResponse) GetCategory() ErrorCategory
+func (e *StructuredBRIAPIResponse) GetCategory() HttpCategory
 func (e *StructuredBRIAPIResponse) GetTimestamp() time.Time
-func (e *StructuredBRIAPIResponse) Error() string 
+func (e *StructuredBRIAPIResponse) Error() string
 func (e *StructuredBRIAPIResponse) IsPending() bool
 func (e *StructuredBRIAPIResponse) IsSuccess() bool
 func (e *StructuredBRIAPIResponse) IsClientError() bool
@@ -309,6 +724,12 @@ if err != nil {
 		log.Printf("BRI Error [%s]: %s", briErr.ResponseCode, briErr.ResponseMessage)
 		log.Printf("Category: %s", briErr.GetCategory())
 
+		// Check if it's a client error (4xx)
+		if briErr.IsClientError() {
+			log.Printf("Client error - check your request data")
+		}
+
+		// Check if response code is unknown/pending
 		if briErr.IsPending() {
 			log.Printf("Unknown response code - manual verification required")
 		}
@@ -317,13 +738,27 @@ if err != nil {
 }
 ```
 
+### Field Extraction from Errors
+
+The library automatically extracts field names from error messages for better debugging:
+
+```go
+// Example API error response:
+// {"responseCode": "4002701", "responseMessage": "Invalid Mandatory Field institutionCode"}
+
+_, err := client.CreateVirtualAccount(context.Background(), req)
+if briErr, ok := err.(*gobriva.StructuredBRIAPIResponse); ok {
+	// Error message will include field extraction:
+	// "BRI API Error [4002701]: Invalid Mandatory Field institutionCode (field: institutionCode)"
+	log.Printf("Error: %s", briErr.Error())
+}
+```
+
 ## Testing
 
 ### Test Coverage
 
-Current test coverage: **81.0%**
-
-### Testing Strategy
+Current test coverage: **76+ unit tests** with comprehensive coverage of all operations and error scenarios.
 
 The library uses multiple testing approaches:
 
